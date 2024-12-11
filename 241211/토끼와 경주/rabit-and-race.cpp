@@ -17,7 +17,7 @@ pii rabbits[2001];
 unordered_set<int> rabbitPids;
 ll totalScore = 0;
 ll maxScore = 0;
-ll idxToScore[2001]; // 점수 관리
+ll idxToScore[2001] = {0, }; // 점수 관리
 
 int dr[4] = {-1, 1, 0, 0};
 int dc[4] = {0, 0, -1, 1};
@@ -86,7 +86,7 @@ void raceEachTurn() {
 
 bool cmpMax(const vector<int>& a, const vector<int>& b) {
     for (size_t i = 0; i < a.size(); i++) {
-        if (a[i] != b[i]) return a[i] < b[i];
+        if (a[i] != b[i]) return a[i] > b[i];
     }
     return false;
 }
@@ -96,10 +96,10 @@ void findLastRabbit(int score) {
     vector<vector<int>> tmp;
     for (const auto& rPid : rabbitPids) {
         int RCSum = rabbits[pidToIdx[rPid]].first + rabbits[pidToIdx[rPid]].second;
-        tmp.push_back({rPid, RCSum, rabbits[pidToIdx[rPid]].first, rabbits[pidToIdx[rPid]].second});
+        tmp.push_back({RCSum, rabbits[pidToIdx[rPid]].first, rabbits[pidToIdx[rPid]].second, rPid});
     }
     sort(tmp.begin(), tmp.end(), cmpMax);
-    int lastPid = tmp[0][0];
+    int lastPid = tmp[0][3];
     int lastRIdx = pidToIdx[lastPid];
     idxToScore[lastRIdx] += score;
 }
@@ -139,7 +139,9 @@ int main() {
             idxDist[nowIdx] *= L;
         }
         else {
+            
             for (int i=1; i<=P; ++i){
+                //cout << totalScore+idxToScore[i] << "\n";
                 maxScore = max(maxScore, totalScore + idxToScore[i]);
             }
             cout << maxScore << "\n";
