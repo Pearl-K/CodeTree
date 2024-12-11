@@ -12,9 +12,10 @@ int Q, P, N, M, K, S;
 
 // P마리 토끼, N*M 격자에서 경주, K번의 turn
 unordered_map<int, int> pidToIdx;
+unordered_map<int, int> idxToPid;
 ll idxDist[2001];
 pii rabbits[2001];
-unordered_set<int> rabbitPids;
+bool rIdxContain[2001] = {false, };
 ll totalScore = 0;
 ll maxScore = 0;
 ll idxToScore[2001] = {0, }; // 점수 관리
@@ -22,7 +23,7 @@ ll idxToScore[2001] = {0, }; // 점수 관리
 int dr[4] = {-1, 1, 0, 0};
 int dc[4] = {0, 0, -1, 1};
 
-// 좌표 보정 함수
+// 좌표 계산
 pii calPos(int nr, int nc) {
     while (nr < 1 || nr > N || nc < 1 || nc > M) {
         if (nr < 1) nr = (abs(nr) % ((2 * N) - 2)) + 2;
@@ -35,7 +36,7 @@ pii calPos(int nr, int nc) {
     return {nr, nc};
 }
 
-// 우선순위 비교 함수
+// 우선순위 비교
 struct cmpMin {
     bool operator()(const vector<int>& a, const vector<int>& b) {
         for (size_t i = 0; i < a.size(); i++) {
@@ -59,7 +60,7 @@ void raceEachTurn() {
     int nowIdx = pidToIdx[nowR[4]];
     int nowD = idxDist[nowIdx];
 
-    // 4방향으로 이동
+    // 4방향 이동
     vector<pipii> dirs;
     for (int d = 0; d < 4; ++d) {
         int nr = nowR[2] + (dr[d] * nowD);
@@ -75,7 +76,7 @@ void raceEachTurn() {
     int nxtRow = dirs[0].second.first;
     int nxtCol = dirs[0].second.second;
 
-    rabbitPids.insert(nowR[4]);
+    rIdxContain[nowIdx] = true;
     rabbits[nowIdx] = {nxtRow, nxtCol};
 
     totalScore += nxtRCSum;
@@ -94,10 +95,14 @@ bool cmpMax(const vector<int>& a, const vector<int>& b) {
 // 마지막 토끼 선정
 void findLastRabbit(int score) {
     vector<vector<int>> tmp;
-    for (const auto& rPid : rabbitPids) {
-        int RCSum = rabbits[pidToIdx[rPid]].first + rabbits[pidToIdx[rPid]].second;
-        tmp.push_back({RCSum, rabbits[pidToIdx[rPid]].first, rabbits[pidToIdx[rPid]].second, rPid});
+    for(int i=1; i<=P; i++) {
+        if (rIdxContain[i]) {
+            int RCSum = rabbits[i].first + rabbits[i].second;
+            int rPid = idxToPid[i];
+            tmp.push_back({RCSum, rabbits[i].first, rabbits[i].second, rPid});
+        }
     }
+
     sort(tmp.begin(), tmp.end(), cmpMax);
     int lastPid = tmp[0][3];
     int lastRIdx = pidToIdx[lastPid];
@@ -118,13 +123,14 @@ int main() {
                 int pid, d;
                 cin >> pid >> d;
                 pidToIdx[pid] = i;
+                idxToPid[i] = pid;
                 idxDist[i] = d;
                 pq.push({0, 2, 1, 1, pid});
             }
         }
         else if (num == 200) {
             cin >> K >> S;
-            rabbitPids.clear();
+            fill(begin(rIdxContain), end(rIdxContain), false); //초기화
 
             for (int k = 0; k < K; ++k) {
                 raceEachTurn();
@@ -139,12 +145,10 @@ int main() {
             idxDist[nowIdx] *= L;
         }
         else {
-            
             for (int i=1; i<=P; ++i){
-                //cout << totalScore+idxToScore[i] << "\n";
                 maxScore = max(maxScore, totalScore + idxToScore[i]);
             }
-            cout << maxScore << "\n";
+            cout << maxScore;
         }
     }
     return 0;
