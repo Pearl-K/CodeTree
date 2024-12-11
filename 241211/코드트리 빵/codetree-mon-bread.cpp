@@ -17,25 +17,25 @@ int grid[MAX_N][MAX_N];
 pii goals[MAX_M];
 pii pos[MAX_M];
 bool arrived[MAX_M];
+int distFromGoal[MAX_N][MAX_N][MAX_M];  // 각 칸에서 목표 지점까지의 최단 거리 (각 목표마다 별도로 계산)
 
 bool rangeCheck(int r, int c) {
     return (1 <= r && r <= N && 1 <= c && c <= N);
 }
 
-// BFS로 최단 거리 계산
-int bfsCnt(int sr, int sc, int gr, int gc) {
+// BFS로 목표까지의 최단 거리 계산 (한 번만 계산)
+void bfsForGoal(int goalIndex) {
     queue<pii> Q;
     int dist[MAX_N][MAX_N];
     fill(&dist[0][0], &dist[MAX_N-1][MAX_N], -1);
 
-    Q.push({sr, sc});
-    dist[sr][sc] = 0;
+    int gr = goals[goalIndex].first, gc = goals[goalIndex].second;
+    Q.push({gr, gc});
+    dist[gr][gc] = 0;
 
     while (!Q.empty()) {
         auto [r, c] = Q.front();
         Q.pop();
-
-        if (r == gr && c == gc) return dist[r][c];
 
         for (int i = 0; i < 4; ++i) {
             int nr = r + dr[i];
@@ -47,10 +47,16 @@ int bfsCnt(int sr, int sc, int gr, int gc) {
             Q.push({nr, nc});
         }
     }
-    return INF;
+
+    // 각 칸에 대해 해당 목표까지의 최단 거리 기록
+    for (int r = 1; r <= N; ++r) {
+        for (int c = 1; c <= N; ++c) {
+            distFromGoal[r][c][goalIndex] = dist[r][c];
+        }
+    }
 }
 
-// bfs로 BaseCamp 위치 찾기, 편의점 위치 넣고 역탐색
+// BaseCamp를 찾을 때는 목표 지점에서 가장 가까운 베이스캠프를 찾음
 pii findBasecamp(int gr, int gc) {
     queue<pii> Q;
     int dist[MAX_N][MAX_N];
@@ -65,7 +71,7 @@ pii findBasecamp(int gr, int gc) {
         auto [r, c] = Q.front();
         Q.pop();
 
-        for (int i=0; i<4; ++i) { // 역탐색이므로 순서 반대로
+        for (int i = 0; i < 4; ++i) { // 역탐색이므로 순서 반대로
             int nr = r + dr[i];
             int nc = c + dc[i];
 
@@ -78,7 +84,7 @@ pii findBasecamp(int gr, int gc) {
                 if (bestBC.first == INF ||
                     nr < bestBC.first ||
                     (nr == bestBC.first && nc < bestBC.second)) {
-                    minDist = grid[nr][nc];
+                    minDist = dist[nr][nc];
                     bestBC = {nr, nc};
                 }
             }
@@ -89,8 +95,8 @@ pii findBasecamp(int gr, int gc) {
 }
 
 //t초에 해당하는 turn 끝나고 grid에서 못가는 칸 배열 받아서 잠그기
-void blockSpace(vector<pii> &spaces){
-    for(const auto& pos : spaces){
+void blockSpace(vector<pii> &spaces) {
+    for (const auto& pos : spaces) {
         grid[pos.first][pos.second] = -1;
     }
 }
@@ -100,14 +106,19 @@ int main() {
     cin.tie(0);
     cin >> N >> M;
 
-    for (int r=1; r<=N; ++r) {
-        for (int c=1; c<=N; ++c) {
+    for (int r = 1; r <= N; ++r) {
+        for (int c = 1; c <= N; ++c) {
             cin >> grid[r][c];
         }
     }
 
-    for (int i=1; i <=M; ++i) {
+    for (int i = 1; i <= M; ++i) {
         cin >> goals[i].first >> goals[i].second;
+    }
+
+    // 각 목표에 대해 BFS를 한 번씩만 수행하여 distFromGoal 배열을 채움
+    for (int i = 1; i <= M; ++i) {
+        bfsForGoal(i);
     }
 
     int t = 0;
@@ -122,7 +133,7 @@ int main() {
             int r = pos[i].first, c = pos[i].second;
             int gr = goals[i].first, gc = goals[i].second;
 
-            // 최단 거리 찾기
+            // 최단 거리 찾기 (distFromGoal 배열에서 값 참조)
             int minDist = INF;
             pii nextPos = {-1, -1};
 
@@ -132,7 +143,7 @@ int main() {
 
                 if (!rangeCheck(nr, nc) || grid[nr][nc] == -1) continue;
 
-                int dist = bfsCnt(nr, nc, gr, gc);
+                int dist = distFromGoal[nr][nc][i];  // BFS 결과 배열에서 최단 거리 가져옴
                 if (dist < minDist || (dist == minDist && j < 2)) {
                     minDist = dist;
                     nextPos = {nr, nc};
