@@ -1,163 +1,147 @@
 #include <iostream>
+#include <vector>
 #include <queue>
+#include <set>
+#include <algorithm>
+#include <tuple>
+#include <cmath>
+
 using namespace std;
-using pii = pair<int, int>;
-using pipii = pair<int, pair<int, int>>;
+
+const int BASECAMP = 1;
+const int dx[] = {-1, 0, 0, 1};
+const int dy[] = {0, -1, 1, 0};
 
 int N, M;
-int grid[16][16]; // 0 : 빈 칸, 1 : BC, -1 : 잠긴 칸
-pii pos[31]; // 사람의 위치
-pii goals[31]; // 목표 편의점 위치
-bool arrived[31]= {false, }; // 사람의 편의점 도착 여부
-const int MAX = 1e9;
-const int dr[4] = {-1, 0, 0, 1};
-const int dc[4] = {0, -1, 1, 0};
+vector<vector<int>> map;
+vector<pair<int, int>> baseCamps;
+vector<pair<int, int>> convenienceStores;
+vector<tuple<int, int, int, int, bool>> persons;
+set<pair<int, int>> banLocations;
 
-void init(){ // 사람 위치 초기화
-    for(int i=0; i<31; ++i) {
-        pos[i] = {16, 16};
-    }
-}
-
-bool rangeCheck(int r, int c){
-    return (0 < r && r <= N && 0 < c && c <= N);
-}
-
-// 1. t번 사람이 BC 찾는 함수(BFS)
-void findBestBC(int sr, int sc, int idx){
-    bool vst[16][16] = {false, };
-    int minDist = MAX;
-    queue<pipii> Q; // <dist, <r, c>> 순서
-    Q.push({0, {sr, sc}});
-
-    while(!Q.empty()){
-        pipii tmp = Q.front();
-        Q.pop();
-
-        int dist = tmp.first;
-        int r = tmp.second.first;
-        int c = tmp.second.second;
-        vst[r][c] = true;
-
-        for (int i=0; i<4; ++i){
-            int nr = r + dr[i];
-            int nc = c + dc[i];
-
-            // 범위 체크, 방문 체크
-            if(rangeCheck(nr, nc) && grid[nr][nc] != -1 && !vst[nr][nc]){
-                if (grid[nr][nc] == 1 && minDist >= dist+1){
-                    // 최단 거리로 BC 도착했을 때
-                    if (pos[idx].first > nr || (pos[idx].first == nr && pos[idx].second > nc)){
-                        pos[idx] = {nr, nc};
-                        minDist = dist+1;
-                    }
-                }
-                else if (grid[nr][nc] != 1) Q.push({dist+1, {nr, nc}});
-            }
+bool isAllReached() {
+    for (auto& person : persons) {
+        if (!get<4>(person)) {
+            return false;
         }
-    }
-}
-
-// 2. 격자 4방향 중 이동 방향 정하는 함수 (4방향, 상 좌 우 하 순서)
-int findDir(int sr, int sc, int gr, int gc){
-    bool vst[16][16] = {false, };
-    queue<pipii> Q; // <dist, <r, c>> 순서
-    Q.push({0, {sr, sc}});
-
-    while(!Q.empty()){
-        pipii tmp = Q.front();
-        Q.pop();
-
-        int dist = tmp.first;
-        int r = tmp.second.first;
-        int c = tmp.second.second;
-        vst[r][c] = true;
-
-        if(r == gr && c == gc) return dist;
-
-        for (int i=0; i<4; ++i){
-            int nr = r + dr[i];
-            int nc = c + dc[i];
-
-            // 범위 체크
-            if(rangeCheck(nr, nc) && grid[nr][nc] != -1 && !vst[nr][nc]){
-                Q.push({dist+1, {nr, nc}});
-            }
-        }
-    }
-    return MAX; // 도착 불가능한 경우
-}
-
-// 3. 좌표 잠그는 함수
-void blockSpace(int r, int c){
-    grid[r][c] = -1;
-}
-
-bool checkEnd(int maxP){
-    for(int i=1; i<=maxP; ++i){
-        if(!arrived[i]) return false;
     }
     return true;
 }
 
-int main(){
-    ios::sync_with_stdio(0);
-    cin.tie(0);
+pair<int, int> findNearestBaseCamp(int startX, int startY) {
+    vector<vector<bool>> visited(N + 1, vector<bool>(N + 1, false));
+    queue<tuple<int, int, int>> q;
+    priority_queue<tuple<int, int, int>, vector<tuple<int, int, int>>, greater<>> pq;
 
+    q.emplace(startX, startY, 0);
+    visited[startX][startY] = true;
+
+    while (!q.empty()) {
+        auto [x, y, dist] = q.front();
+        q.pop();
+
+        if (map[x][y] == BASECAMP) {
+            pq.emplace(dist, x, y);
+        }
+
+        for (int i = 0; i < 4; ++i) {
+            int nx = x + dx[i], ny = y + dy[i];
+            if (nx >= 1 && nx <= N && ny >= 1 && ny <= N && !visited[nx][ny] && map[nx][ny] != -1 &&
+                !banLocations.count({nx, ny})) {
+                visited[nx][ny] = true;
+                q.emplace(nx, ny, dist + 1);
+            }
+        }
+    }
+
+    if (pq.empty()) return {-1, -1};
+    return {get<1>(pq.top()), get<2>(pq.top())};
+}
+
+int getNextDirection(int curX, int curY, int targetX, int targetY) {
+    vector<vector<bool>> visited(N + 1, vector<bool>(N + 1, false));
+    queue<tuple<int, int, int>> q;
+    q.emplace(curX, curY, -1);
+    visited[curX][curY] = true;
+
+    while (!q.empty()) {
+        auto [x, y, dir] = q.front();
+        q.pop();
+
+        if (x == targetX && y == targetY) return dir;
+
+        for (int i = 0; i < 4; ++i) {
+            int nx = x + dx[i], ny = y + dy[i];
+            if (nx >= 1 && nx <= N && ny >= 1 && ny <= N && !visited[nx][ny] && !banLocations.count({nx, ny})) {
+                visited[nx][ny] = true;
+                q.emplace(nx, ny, dir == -1 ? i : dir);
+            }
+        }
+    }
+    return -1;
+}
+
+void movePerson(int& curX, int& curY, int targetX, int targetY) {
+    int dir = getNextDirection(curX, curY, targetX, targetY);
+    if (dir != -1) {
+        curX += dx[dir];
+        curY += dy[dir];
+    }
+}
+
+int main() {
     cin >> N >> M;
-    for (int i=1; i<=N; ++i){
-        for (int j=1; j<=N; ++j) {
-            cin >> grid[i][j];
+    map.assign(N + 1, vector<int>(N + 1));
+
+    for (int i = 1; i <= N; ++i) {
+        for (int j = 1; j <= N; ++j) {
+            cin >> map[i][j];
+            if (map[i][j] == BASECAMP) {
+                baseCamps.emplace_back(i, j);
+            }
         }
     }
 
-    for (int i=1; i<=M; ++i){
-        cin >> goals[i].first >> goals[i].second;
+    for (int i = 0; i < M; ++i) {
+        int x, y;
+        cin >> x >> y;
+        convenienceStores.emplace_back(x, y);
+        persons.emplace_back(0, 0, x, y, false);
     }
 
-    init();
-    int time = 0;
-    while(true){
+    int time = 1;
+    while (!isAllReached()) {
+        // Move persons
+        for (int i = 0; i < M; ++i) {
+            auto& [curX, curY, targetX, targetY, isArrived] = persons[i];
+            if (time > i + 1 && !isArrived) {
+                movePerson(curX, curY, targetX, targetY);
+            }
+        }
+
+        // Check if anyone arrived
+        for (int i = 0; i < M; ++i) {
+            auto& [curX, curY, targetX, targetY, isArrived] = persons[i];
+            if (curX == targetX && curY == targetY) {
+                isArrived = true;
+                banLocations.insert({curX, curY});
+            }
+        }
+
+        // Assign base camps
+        for (int i = 0; i < M; ++i) {
+            auto& [curX, curY, targetX, targetY, isArrived] = persons[i];
+            if (time == i + 1) {
+                auto [bx, by] = findNearestBaseCamp(targetX, targetY);
+                curX = bx;
+                curY = by;
+                banLocations.insert({bx, by});
+            }
+        }
+
         ++time;
-
-        for(int i=1; i <= M && i < time; ++i){
-            // 1. 가고 싶은 편의점 방향 향해서 이동
-            if(!arrived[i]){
-                int minDist = MAX;
-                int minDir = -1;
-
-                for(int d=0; d<4; ++d){
-                    int sr = pos[i].first + dr[d];
-                    int sc = pos[i].second + dc[d];
-
-                    if(rangeCheck(sr, sc) && grid[sr][sc] != -1){
-                        int nowDist = findDir(sr, sc, goals[i].first, goals[i].second);
-                        if (minDist > nowDist){
-                            minDist = nowDist;
-                            minDir = d;
-                        }
-                    }
-                }
-                //minDir 만큼 이동, 도착은 나중에 한 번에 처리
-                pos[i].first += dr[minDir];
-                pos[i].second += dc[minDir];
-            }
-        }
-
-        // 3. BC 배정 & 좌표 잠그기
-        if(time <= M) {
-            findBestBC(goals[time].first, goals[time].second, time);
-            blockSpace(pos[time].first, pos[time].second);
-        }
-        for(int i=1; i<=M; ++i){
-            if(pos[i] == goals[i] && !arrived[i]){
-                arrived[i] = true;
-                blockSpace(pos[i].first, pos[i].second);
-            }
-        }
-        
-        if(checkEnd(M)) break; // 모두 도착하면 게임 종료
     }
-    cout << time;
+
+    cout << time-1;
     return 0;
 }
