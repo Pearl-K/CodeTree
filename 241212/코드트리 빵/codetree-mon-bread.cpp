@@ -144,17 +144,18 @@ int main(){
             }
         }
 
-        // 3. BC 배정
-        if(time <= M) findBestBC(goals[time].first, goals[time].second, time);
-
-        // 좌표 잠그기 (도착한 곳, BC 배정한 곳)
+        // 3. BC 배정 & 좌표 잠그기
+        if(time <= M) {
+            findBestBC(goals[time].first, goals[time].second, time);
+            blockSpace(pos[time].first, pos[time].second);
+        }
         for(int i=1; i<=M; ++i){
             if(pos[i] == goals[i] && !arrived[i]){
                 arrived[i] = true;
                 blockSpace(pos[i].first, pos[i].second);
             }
         }
-        blockSpace(pos[time].first, pos[time].second);
+        
         if(checkEnd(M)) break; // 모두 도착하면 게임 종료
     }
     cout << time;
