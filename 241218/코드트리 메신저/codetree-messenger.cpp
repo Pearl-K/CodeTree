@@ -2,16 +2,15 @@
 #include <vector>
 #include <algorithm>
 using namespace std;
-using vi = vector<int>;
 const int MAX = 100001;
 const int MAX_POWER = 20;
 
 int N, Q;
 int parents[MAX];
+vector<vector<int>> children(MAX);
 int auth[MAX];
-bool alarms[MAX] = {true, }; // true로 초기화
-vector<vi> children(MAX);
-vector<vi> alarmDP(MAX, vi(21, 0));
+vector<vector<int>> authDP(MAX, vector<int>(21, 0));
+vector<bool> alarms(MAX, true); // 전체를 true로 초기화
 
 void init() {
     for (int i = 1; i <= N; ++i) {
@@ -22,12 +21,12 @@ void init() {
         auth[i] = min(MAX_POWER, auth[i]);
     }
 
-    // 부모-자식 관계 설정 및 권한에 따른 알림 설정
+    // 알림 설정
     for (int i = 1; i <= N; ++i) {
         children[parents[i]].push_back(i);
         int power = auth[i], idx = i;
         while (power >= 0) {
-            alarmDP[idx][power] += 1;
+            authDP[idx][power] += 1;
             power--;
 
             if (idx == parents[idx]) break;
@@ -37,18 +36,18 @@ void init() {
 }
 
 void update(int idx) {
-    fill(alarmDP[idx].begin(), alarmDP[idx].end(), 0);
-    alarmDP[idx][auth[idx]] += 1;
+    fill(authDP[idx].begin(), authDP[idx].end(), 0);
+    authDP[idx][auth[idx]] += 1;
 
     // 자식 노드들 range 합산
     for (int child : children[idx]) {
         if (!alarms[child]) continue;
         for (int i = 0; i < MAX_POWER; ++i) {
-            alarmDP[idx][i] += alarmDP[child][i+1];
+            authDP[idx][i] += authDP[child][i+1];
         }
     }
 
-    // 부모 값 update, root 갈 때까지
+    // 부모로 값 전파
     if (idx != parents[idx]) {
         update(parents[idx]);
     }
@@ -72,7 +71,7 @@ void changeParents(int c1, int c2) {
     parents[c1] = p2;
     parents[c2] = p1;
 
-    // 자식 관계 스왑
+    // 자식 관계 update
     auto it1 = find(children[p1].begin(), children[p1].end(), c1);
     if (it1 != children[p1].end()) children[p1].erase(it1);
     children[p2].push_back(c1);
@@ -80,7 +79,7 @@ void changeParents(int c1, int c2) {
     auto it2 = find(children[p2].begin(), children[p2].end(), c2);
     if (it2 != children[p2].end()) children[p2].erase(it2);
     children[p1].push_back(c2);
-    
+
     update(p1);
     update(p2);
 }
@@ -88,7 +87,7 @@ void changeParents(int c1, int c2) {
 void printRet(int cur) {
     int ret = 0;
     for (int i = 0; i < 21; ++i) {
-        ret += alarmDP[cur][i];
+        ret += authDP[cur][i];
     }
     cout << ret-1 << "\n";
 }
@@ -115,5 +114,6 @@ int main() {
             printRet(c1);
         }
     }
+
     return 0;
 }
