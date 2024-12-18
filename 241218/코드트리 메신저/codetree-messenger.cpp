@@ -9,7 +9,7 @@ const int MAX_POWER = 20;
 int N, Q;
 int parents[MAX];
 int auth[MAX];
-bool alarms[21] = {true, }; // true로 초기화
+bool alarms[MAX] = {true, }; // true로 초기화
 vector<vi> children(MAX);
 vector<vi> alarmDP(MAX, vi(21, 0));
 
