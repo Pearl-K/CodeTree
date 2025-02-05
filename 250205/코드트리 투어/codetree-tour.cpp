@@ -128,7 +128,7 @@ void comm400() {
 // - 큐에 있는 모든 상품의 profit 재계산
 void comm500(int newSt) {
     start = newSt;
-    //distDic.clear();
+    distDic.clear();
     distDic[start] = dijkstra(start);
 
     vector<tiiii> tmp;
