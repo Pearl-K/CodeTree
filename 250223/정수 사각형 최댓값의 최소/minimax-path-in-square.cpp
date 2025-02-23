@@ -14,7 +14,7 @@ bool checkRange(int r, int c){
 int fillDp(int r, int c){
     if (r == 0 && c == 0) return grid[r][c];
     if (dp[r][c] != -1) return dp[r][c];
-    if(!checkRange(r, c)) return 0;
+    if(!checkRange(r, c)) return INF;
     return dp[r][c] 
         = min(max(fillDp(r-1, c), grid[r][c]), max(fillDp(r, c-1), grid[r][c]));
 }
