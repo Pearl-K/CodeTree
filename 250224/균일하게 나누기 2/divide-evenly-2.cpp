@@ -6,6 +6,7 @@ using namespace std;
 using ll = long long;
 using pii = pair<int, int>;
 const int INF = 1e9;
+const int MAX = 1000;
 
 int N;
 int x[1000];
@@ -36,16 +37,16 @@ int main() {
 
     // 2차원 누적합 구해서
     // a, b 기준으로 이중 for문으로 해결
-    for(int i=0; i<=N; ++i){
+    for(int i=0; i<=MAX; ++i){
         preSum[i][0] = 0;
     }
 
-    for(int j=0; j<=N; ++j){
+    for(int j=0; j<=MAX; ++j){
         preSum[0][j] = 0;
     }
 
-    for(int i=1; i<=N; ++i){
-        for(int j=1; j<=N; ++j){
+    for(int i=1; i<=MAX; ++i){
+        for(int j=1; j<=MAX; ++j){
             preSum[i][j] = grid[i-1][j-1] 
                            + preSum[i-1][j] 
                            + preSum[i][j-1] 
@@ -57,8 +58,8 @@ int main() {
     int ret = INF;
 
     // O(N^2) 으로 전체 돌면서 체크
-    for(int i=0; i<=N; ++i){
-        for(int j=0; j<=N; ++j){
+    for(int i=0; i<=MAX; ++i){
+        for(int j=0; j<=MAX; ++j){
             int lu = preSum[i][j];
             int ru = preSum[i][N] - lu;
             int ld = preSum[N][j];
