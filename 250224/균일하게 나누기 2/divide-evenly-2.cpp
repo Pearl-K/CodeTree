@@ -6,7 +6,7 @@ using namespace std;
 using ll = long long;
 using pii = pair<int, int>;
 const int INF = 1e9;
-const int MAX = 1000;  // 좌표의 최대값: 0 ~ 1000 (즉, grid 크기는 1001 x 1001)
+const int MAX = 1000;
 
 int N;
 int x[1000];
@@ -25,12 +25,10 @@ int main() {
     memset(grid, 0, sizeof(grid));
     for (int i = 0; i < N; i++) {
         cin >> x[i] >> y[i];
-        // 만약 입력 좌표가 1~1000 범위라면 여기서 1을 빼서 0-index로 맞춰야 합니다.
         grid[x[i]][y[i]] = 1;
     }
 
-    // 2차원 누적합(preSum) 계산
-    // preSum[i][j] = sum of grid[0..i-1][0..j-1]
+    // 2차원 누적합(preSum)
     for(int i = 0; i <= MAX; ++i){
         preSum[i][0] = 0;
     }
@@ -46,16 +44,15 @@ int main() {
         }
     }
 
-    int total = preSum[MAX][MAX]; // 전체 점의 개수
+    int total = preSum[MAX][MAX];
     int ret = INF;
 
-    // 모든 분할 후보 (i, j) (0 <= i,j <= MAX)
     for(int i = 0; i <= MAX; ++i){
         for(int j = 0; j <= MAX; ++j){
-            int lu = preSum[i][j]; // 좌상: 0 <= x < i, 0 <= y < j
-            int ru = preSum[i][MAX] - preSum[i][j]; // 우상: 0 <= x < i, j <= y < MAX
-            int ld = preSum[MAX][j] - preSum[i][j]; // 좌하: i <= x < MAX, 0 <= y < j
-            int rd = total - (lu + ru + ld); // 우하: 나머지
+            int lu = preSum[i][j]; // 좌상
+            int ru = preSum[i][MAX] - preSum[i][j]; // 우상
+            int ld = preSum[MAX][j] - preSum[i][j]; // 좌하
+            int rd = total - (lu + ru + ld); // 우하
 
             int tmpMax = findMax(lu, ru, ld, rd);
             ret = min(ret, tmpMax);
@@ -64,3 +61,4 @@ int main() {
     cout << ret << "\n";
     return 0;
 }
+
