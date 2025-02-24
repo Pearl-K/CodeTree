@@ -61,9 +61,9 @@ int main() {
     for(int i=0; i<=MAX; ++i){
         for(int j=0; j<=MAX; ++j){
             int lu = preSum[i][j];
-            int ru = preSum[i][N] - lu;
-            int ld = preSum[N][j];
-            int rd = preSum[N][N] - ld - ru + lu;
+            int ru = preSum[i][MAX] - lu;
+            int ld = preSum[MAX][j];
+            int rd = preSum[MAX][MAX] - ld - ru + lu;
 
             int tmpMax = findMax(lu, ru, ld, rd);
             ret = min(ret, tmpMax);
