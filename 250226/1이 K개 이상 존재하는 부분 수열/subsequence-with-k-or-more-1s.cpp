@@ -12,10 +12,12 @@ int main() {
     cin >> n >> k;
     for (int i=0; i<n; ++i) cin >> arr[i];
     prsBits[0] = 0;
-    for (int i=1; i<=n; ++i) prsBits[i] = prsBits[i-1] + (arr[i-1]%2);
-
+    for (int i=1; i<=n; ++i) {
+        prsBits[i] = prsBits[i-1] + (arr[i-1]%2);
+    }
+        
     int st = 0, ed = 0;
-    while (st <= ed && ed < n){
+    while (st <= ed && ed <= n){
         if(prsBits[ed] - prsBits[st] >= k){
             ret = min(ret, (ed-st));
             st++;
