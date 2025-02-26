@@ -17,13 +17,14 @@ int main() {
     }
         
     int st = 0, ed = 0;
-    while (st <= ed && ed <= n){
+    while (ed <= n){
         if(prsBits[ed] - prsBits[st] >= k){
             ret = min(ret, (ed-st));
             st++;
         }
         else ed++;
     }
+    if(ret >= INF) ret = -1;
     cout << ret << "\n";
     return 0;
 }
