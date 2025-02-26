@@ -1,6 +1,7 @@
 #include <iostream>
 #include <algorithm>
 using namespace std;
+const int INF = 1e6+1;
 
 int n, k;
 int ret = 1e6+1;
