@@ -23,9 +23,9 @@ void cmd100() {
             head[bNum] = tail[bNum] = id;
         } else {
             int oldTail = tail[bNum];
-            giftLink[oldTail].second = id; // 기존 tail의 next를 현재 선물로 연결
-            giftLink[id].first = oldTail; // 현재 선물의 prev를 기존 tail로 연결
-            tail[bNum] = id; // 새로운 tail 갱신
+            giftLink[oldTail].second = id;
+            giftLink[id].first = oldTail;
+            tail[bNum] = id;
         }
     }
 }
