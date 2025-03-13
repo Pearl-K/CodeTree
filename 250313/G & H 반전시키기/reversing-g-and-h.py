@@ -12,6 +12,6 @@ for i in range(N):
         if not flg:
             flg = True
             res += 1
-        else:
-            flg = False
+    else:
+        flg = False
 print(res)
