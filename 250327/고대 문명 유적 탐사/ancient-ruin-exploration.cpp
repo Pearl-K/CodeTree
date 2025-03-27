@@ -39,9 +39,8 @@ void rotate(int src[N][N], int sy, int sx, int cnt, int dest[N][N]) {
 }
 
 int calculateScore(int board[N][N]) {
-    bool visited[N][N] = {false, };
+    bool visited[N][N] = {};
     int score = 0;
-
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N; ++j) {
             if (!visited[i][j]) {
@@ -76,7 +75,7 @@ int calculateScore(int board[N][N]) {
     return score;
 }
 
-void fillEmptyCells(int board[N][N], queue<int>& pieces) {
+void fillOnlyZeros(int board[N][N], queue<int>& pieces) {
     for (int j = 0; j < N; ++j) {
         for (int i = N - 1; i >= 0; --i) {
             if (board[i][j] == 0 && !pieces.empty()) {
@@ -88,7 +87,9 @@ void fillEmptyCells(int board[N][N], queue<int>& pieces) {
 }
 
 int main() {
-    cin.tie(0)->sync_with_stdio(0);
+    ios::sync_with_stdio(false);
+    cin.tie(0);
+
     cin >> K >> M;
     for (int i = 0; i < N; ++i)
         for (int j = 0; j < N; ++j)
@@ -101,31 +102,35 @@ int main() {
     }
 
     while (K--) {
-        int maxScore = 0;
+        int maxScore = -1;
         int bestGrid[N][N];
-        bool found = false;
+        int bestRot = 4, bestY = 5, bestX = 5;
 
         for (int sy = 0; sy <= N - S; ++sy) {
             for (int sx = 0; sx <= N - S; ++sx) {
                 for (int rot = 1; rot <= 3; ++rot) {
                     int rotated[N][N];
                     rotate(grid, sy, sx, rot, rotated);
-
                     int score = calculateScore(rotated);
-                    if (score > maxScore) {
+
+                    if (score > maxScore ||
+                       (score == maxScore && (rot < bestRot ||
+                       (rot == bestRot && (sx < bestX || (sx == bestX && sy < bestY)))))) {
                         maxScore = score;
+                        bestRot = rot;
+                        bestY = sy;
+                        bestX = sx;
                         copyGrid(bestGrid, rotated);
-                        found = true;
                     }
                 }
             }
         }
 
-        if (!found) break;
+        if (maxScore <= 0) break;
         copyGrid(grid, bestGrid);
 
         while (true) {
-            fillEmptyCells(grid, leftPieces);
+            fillOnlyZeros(grid, leftPieces);
             int newScore = calculateScore(grid);
             if (newScore == 0) break;
             maxScore += newScore;
@@ -133,6 +138,5 @@ int main() {
 
         cout << maxScore << " ";
     }
-
     return 0;
 }
